@@ -4,9 +4,6 @@ from collections import Counter
 from typing import Any, Iterable
 
 
-ORDERED_SCALES = {"agreement_5", "quality_5", "yes_no"}
-
-
 def format_percent_tr(value: float) -> str:
     """Format percentage with one decimal and Turkish comma separator."""
     return f"{value:.1f}".replace(".", ",")
@@ -34,10 +31,7 @@ def compute_closed_ended_table(
     - NaN and blank responses are ignored.
     - percentages are TR formatted with one decimal precision.
     """
-    if scale_name not in ORDERED_SCALES:
-        raise ValueError(f"Unsupported scale name: {scale_name}")
-
-    categories = config["scales"][scale_name]
+    categories = config["scales"].get(scale_name, [])
     if not categories:
         raise ValueError(f"Scale '{scale_name}' has no categories")
 

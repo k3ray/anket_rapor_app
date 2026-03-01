@@ -1,11 +1,16 @@
 # Anket Rapor App
 
-## Çalıştırma
+## Çalıştırma (önerilen)
 
 ```bash
 pip install -r requirements.txt
-python gui.py
+python -c "from report_builder import generate_report; print(generate_report(r'.\samples\input.xlsx', r'.\config\config_rizepem_2026_2.yaml', r'.\out'))"
 ```
+
+## Legacy / Demo
+
+- `python gui.py` ve `src/app` akışı legacy/demo amaçlıdır.
+- Üretim için tek doğru entrypoint: `report_builder.generate_report(...)`.
 
 ## PyInstaller ile EXE alma
 

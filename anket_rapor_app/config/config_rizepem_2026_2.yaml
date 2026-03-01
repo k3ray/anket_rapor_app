@@ -1,0 +1,149 @@
+version: 1
+input:
+  sheet: Sayfa
+  header_normalization: true
+  header_normalization_rules:
+    remove_bom: true
+    remove_zero_width: true
+    html_entities: true
+    collapse_whitespace: true
+    strip: true
+fields:
+  submitted_at:
+    aliases:
+    - Oluşturulma zamanı
+    type: datetime
+    report:
+      format: date_only
+      date_format: '%d.%m.%Y'
+demographics:
+  age:
+    aliases:
+    - "\uFEFFYaşınız\uFEFF"
+    label: YAŞ
+  gender:
+    aliases:
+    - "\uFEFFCinsiyetiniz\uFEFF"
+    label: CİNSİYET
+  education:
+    aliases:
+    - "\uFEFF\uFEFFEğitim durumunuz"
+    label: EĞİTİM DURUMU
+  service_years:
+    aliases:
+    - "\uFEFFMemuriyet Süresi (Adalet Hizmetlerinde)\uFEFF"
+    label: HİZMET SÜRESİ
+  province:
+    aliases:
+    - "\uFEFF\uFEFFKatıldığınız il"
+    label: KATILDIĞI İL
+scales:
+  agreement_5:
+  - Tamamen Katılıyorum
+  - Katılıyorum
+  - Kararsızım
+  - Katılmıyorum
+  - Hiç Katılmıyorum
+  quality_5:
+  - Çok İyi
+  - İyi
+  - Orta
+  - İyi Değil
+  - Zayıf
+  yes_no:
+  - Evet
+  - Hayır
+sections:
+- id: sec1_demographics
+  title: I. BÖLÜM
+  items:
+  - field: age
+    heading: 1. EĞİTİM GÖRENLERİN YAŞA GÖRE DAĞILIMI
+  - field: gender
+    heading: 2. EĞİTİM GÖRENLERİN CİNSİYETE GÖRE DAĞILIMI
+  - field: education
+    heading: 3. EĞİTİM GÖRENLERİN EĞİTİM DURUMUNA GÖRE DAĞILIMI
+  - field: service_years
+    heading: 4. EĞİTİM GÖRENLERİN HİZMET SÜRESİNE GÖRE DAĞILIMI
+  - field: province
+    heading: 5. EĞİTİM GÖRENLERİN KATILDIĞI İLE GÖRE DAĞILIMI
+- id: sec2_general_gains
+  title: II. BÖLÜM
+  type: closed_ended
+  scale: agreement_5
+  questions:
+  - column: "\uFEFFEğitim programının; \"kişisel gelişimime katkı sağladığını\" düşünüyorum."
+    heading: "1. \uFEFFEĞITIM PROGRAMININ; \"KIŞISEL GELIŞIMIME KATKI SAĞLADIĞINI\" DÜŞÜNÜYORUM."
+  - column: "\uFEFF\uFEFFEğitim programının; \"mesleğimde kullanacağım yeni bilgi ve/veya beceriler kazandırdığını\" &nbsp;düşünüyorum."
+    heading: "2. \uFEFF\uFEFFEĞITIM PROGRAMININ; \"MESLEĞIMDE KULLANACAĞIM YENI BILGI VE/VEYA BECERILER KAZANDIRDIĞINI\" &NBSP;DÜŞÜNÜYORUM."
+  - column: "\uFEFFEğitim programının; &nbsp;\"iş verimliliğime &nbsp;katkı sağlayacağını\" düşünüyorum."
+    heading: "3. \uFEFFEĞITIM PROGRAMININ; &NBSP;\"IŞ VERIMLILIĞIME &NBSP;KATKI SAĞLAYACAĞINI\" DÜŞÜNÜYORUM."
+- id: sec3_instructors
+  title: III. BÖLÜM
+  type: instructor_evaluation
+  scale: quality_5
+  parse:
+    split_on: '-'
+    left: course_title
+    right: instructor_name
+  questions:
+  - ASLİYE HUKUK MAHKEMESİ İŞ VE İŞLEMLERİ-ÖZLEM FAZİLET KENGELLİ
+  - ASLİYE HUKUK MAHKEMESİ İŞ VE İŞLEMLERİ-BARIŞ KÖROĞLU
+  - BAĞIMLILIKLA MÜCADELE (ORTAK KONFERANS)-BÜŞRA BALYAŞ BALOĞLU
+  - GÜZEL YAŞAMA BECERİSİ-EMEL GÜZEY
+  - HARÇLAR KANUNU-SAVAŞ UZUN
+  - İNSAN HAKLARI VE ADALETE ERİŞİM-VİLDAN GENÇOĞLU ALTINTAŞ
+  - KALEM MEVZUATI-NAZIM ATEŞ
+  - KAMUSAL YAŞAMDA PROTOKOL KURALLARI-EMRE YAMAK
+  - KAYGIYLA BAŞ ETME YÖNTEMLERİ-EMEL GÜZEY
+  - TEBLİGAT HUKUKU-ORHAN GÖYHAN
+- id: sec4_organization
+  title: IV. BÖLÜM
+  type: closed_ended
+  scale: quality_5
+  questions:
+  - "\uFEFFEğitim program sorumlusunun tutum ve yaklaşımını nasıl değerlendirirsiniz?"
+  - Eğitim ortamının fiziki donanımını (ısı, ışık, havalandırma, temizlik vb) nasıl değerlendirirsiniz?
+  - "\uFEFF\uFEFFEğitim ortamının teknik donanımını (bilgisayar, projeksiyon, ses sistemi, akıllı tahta vb) nasıl değerlendirirsiniz?"
+  include_average_row: true
+- id: sec5_venue_1
+  title: V. BÖLÜM
+  type: closed_ended
+  scale: quality_5
+  questions:
+  - Resepsiyon hizmetini nasıl değerlendirirsiniz?
+  - "\uFEFFOda temizlik hizmetini nasıl değerlendirirsiniz?"
+  - "\uFEFFTesis personelinin tutum ve yaklaşımını nasıl değerlendirirsiniz?"
+  - "\uFEFFKonakladığınız odayı donanım yönünden nasıl değerlendirirsiniz?"
+  include_average_row: true
+- id: sec6_venue_2
+  title: VI. BÖLÜM
+  type: closed_ended
+  scale: quality_5
+  questions:
+  - "\uFEFFYemek salonu hizmetini nasıl değerlendirirsiniz?"
+  - "\uFEFF\uFEFFSpor ve sosyal alanları nasıl değerlendirirsiniz?"
+  - "\uFEFFOrtak kullanım alanlarının donanımı ve temizliğini nasıl değerlendirirsiniz?"
+  - Eğitim programı ve verilen hizmetler hakkındaki bilgilendirmeyi nasıl değerlendirirsiniz?
+  include_average_row: true
+  post_questions:
+  - type: single_choice
+    scale: yes_no
+    column: "\uFEFFEğitim Dairesi Başkanlığınca düzenlenecek farklı bir eğitim programına da katılmak ister misiniz?&nbsp;\uFEFF\
+      \uFEFF\uFEFF\uFEFF\uFEFF"
+    heading: "\uFEFFEğitim Dairesi Başkanlığınca düzenlenecek farklı bir eğitim programına da katılmak ister misiniz?&nbsp;\uFEFF\
+      \uFEFF\uFEFF\uFEFF\uFEFF"
+open_ended:
+  columns:
+  - column: "\uFEFFKatıldığınız hizmet içi eğitim programında yer almasını istediğiniz ders/konu önerileriniz:"
+    title: Ders/Konu Önerileri
+  - column: "\uFEFFKatıldığınız &nbsp;hizmet içi eğitim programının daha etkili ve verimli olması için önerileriniz:"
+    title: Eğitimin Daha Etkili Olması İçin Öneriler
+  - column: "Öğretim görevlileri ile ilgili belirtmek istediğiniz düşünceleriniz ve önerileriniz:\uFEFF\uFEFF"
+    title: Öğretim Görevlileri Hakkında Görüşler
+  pii_masking:
+    enabled: true
+    patterns:
+    - email
+    - phone_tr
+    - tc_kimlik_no

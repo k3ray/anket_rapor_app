@@ -8,21 +8,11 @@ import pandas as pd
 import yaml
 
 from anket_rapor_app.analysis.closed_ended import compute_closed_ended_table, format_percent_tr
+from anket_rapor_app.analysis.open_ended import analyze_open_ended
 from anket_rapor_app.report.pdf_builder import MatrixSection, PDFBuilder, ReportContent, SmallBlock
 from anket_rapor_app.report.styles import register_turkish_fonts
+from anket_rapor_app.text_utils import clean_text
 from anket_rapor_app.viz.charts import draw_chart
-
-ZERO_WIDTH_RE = re.compile(r"[\u200b\u200c\u200d\u2060\ufeff]")
-NBSP_RE = re.compile(r"&nbsp;", flags=re.IGNORECASE)
-SPACE_RE = re.compile(r"\s+")
-
-
-def clean_text(value: Any) -> str:
-    text = "" if value is None else str(value)
-    text = ZERO_WIDTH_RE.sub("", text)
-    text = NBSP_RE.sub(" ", text)
-    text = SPACE_RE.sub(" ", text)
-    return text.strip()
 
 
 def _norm(value: Any) -> str:
@@ -56,6 +46,27 @@ def _small_block_rows(series: pd.Series, scale_name: str, config: dict[str, Any]
     return rows, table_rows
 
 
+def _max_category_comment(table_rows: list[dict[str, Any]], heading: str) -> str:
+    if not table_rows:
+        return ""
+    max_row = max(table_rows, key=lambda r: float(str(r["%"]).replace(",", ".")))
+    return f"{clean_text(heading)} maddesinde katılımcıların %{max_row['%']}'inin {clean_text(max_row['Kategori'])} seçeneğinde toplandığı görülmektedir."
+
+
+def _likert_comment(table_rows: list[dict[str, Any]], heading: str) -> str:
+    positive_labels = {"tamamen katılıyorum", "katılıyorum", "çok iyi", "iyi", "evet"}
+    positive = sum(
+        float(str(r["%"]).replace(",", "."))
+        for r in table_rows
+        if clean_text(r["Kategori"]).lower() in positive_labels
+    )
+    max_row = max(table_rows, key=lambda r: float(str(r["%"]).replace(",", "."))) if table_rows else {"Kategori": "-"}
+    return (
+        f"{clean_text(heading)} maddesinde pozitif oran %{format_percent_tr(positive)} olup en yüksek pay %{max_row['%']} ile "
+        f"{clean_text(max_row['Kategori'])} seçeneğindedir."
+    )
+
+
 def _make_small_block(
     df: pd.DataFrame,
     heading: str,
@@ -79,7 +90,11 @@ def _make_small_block(
         field_name=field_name,
         title=clean_text(heading),
     )
-    return SmallBlock(heading=clean_text(heading), rows=rows, chart_path=str(chart_path))
+    if section_roman == "I":
+        comment = _max_category_comment(table_rows, heading)
+    else:
+        comment = _likert_comment(table_rows, heading)
+    return SmallBlock(heading=clean_text(heading), rows=rows, chart_path=str(chart_path), comment=comment)
 
 
 def _build_demographics(df: pd.DataFrame, config: dict[str, Any], chart_dir: Path) -> list[SmallBlock]:
@@ -202,6 +217,54 @@ def _sec3_label_parser(split_on: str):
     return parser
 
 
+def _build_section3_grouped(df: pd.DataFrame, section: dict[str, Any], config: dict[str, Any]) -> MatrixSection:
+    categories = [clean_text(c) for c in config["scales"][section.get("scale", "quality_5")]]
+    headers = ["Ders / Değerlendiren", *categories, "Toplam (%)"]
+    rows: list[list[str]] = []
+    row_kinds: list[str] = []
+    split_on = section.get("parse", {}).get("split_on", "-")
+    grouped: dict[str, list[tuple[str, str]]] = {}
+
+    for label in section.get("questions", []):
+        cleaned = clean_text(label)
+        if split_on in cleaned:
+            course, instructor = [clean_text(x) for x in cleaned.split(split_on, 1)]
+        else:
+            course, instructor = cleaned, ""
+        grouped.setdefault(course, []).append((cleaned, instructor))
+
+    top2_values: list[float] = []
+    for course, labels in grouped.items():
+        rows.append([course, *([""] * (len(categories) + 1))])
+        row_kinds.append("group")
+        for original, instructor in labels:
+            col = _find_col(df, original)
+            if not col:
+                continue
+            table_rows = compute_closed_ended_table(df[col].tolist(), section.get("scale", "quality_5"), config)
+            pct_map = {clean_text(r["Kategori"]): str(r["%"] ) for r in table_rows}
+            top2 = sum(float(str(r["%"]).replace(",", ".")) for r in table_rows[:2])
+            top2_values.append(top2)
+            rows.append([instructor or original] + [pct_map.get(cat, "0,0") for cat in categories] + [format_percent_tr(top2)])
+            row_kinds.append("normal")
+
+    if top2_values:
+        metric_columns: list[str] = []
+        for i in range(len(categories)):
+            vals = [float(r[i + 1].replace(",", ".")) for r, kind in zip(rows, row_kinds) if kind == "normal"]
+            metric_columns.append(format_percent_tr(sum(vals) / len(vals)) if vals else "0,0")
+        rows.append(["ORTALAMA", *metric_columns, format_percent_tr(sum(top2_values) / len(top2_values))])
+        row_kinds.append("average")
+
+    return MatrixSection(
+        title=clean_text(section.get("title", "III. BÖLÜM")),
+        headers=headers,
+        rows=rows,
+        row_kinds=row_kinds,
+        comment=f"III. BÖLÜM genel Top2 (Çok İyi + İyi) oranı %{format_percent_tr(sum(top2_values) / len(top2_values)) if top2_values else '0,0'} olarak hesaplanmıştır.",
+    )
+
+
 def _build_yes_no_block(df: pd.DataFrame, section: dict[str, Any], config: dict[str, Any], chart_dir: Path) -> SmallBlock | None:
     post_questions = section.get("post_questions", [])
     if not post_questions:
@@ -245,6 +308,20 @@ def _summary_lines(content: ReportContent) -> list[str]:
     return lines
 
 
+def _open_ended_summary(df: pd.DataFrame, config: dict[str, Any]) -> list[str]:
+    open_cfg = config.get("open_ended", {})
+    if not open_cfg:
+        return []
+    results = analyze_open_ended(df, open_cfg, llm_enabled=False)
+    lines: list[str] = []
+    for title, themes in results.items():
+        for theme in themes[:3]:
+            lines.append(f"{title} — {clean_text(theme.theme)}: {clean_text(theme.summary)}")
+            if len(lines) >= 10:
+                return lines
+    return lines
+
+
 def generate_report(excel_path: str, config_path: str, output_dir: str, log=print) -> Path:
     register_turkish_fonts()
 
@@ -269,13 +346,13 @@ def generate_report(excel_path: str, config_path: str, output_dir: str, log=prin
         title="Anket Raporu",
         section1=_build_demographics(df, config, chart_dir),
         section2=_build_section2(df, config, chart_dir),
-        section3=_matrix_for_section(df, section3_cfg, config, _sec3_label_parser(section3_cfg.get("parse", {}).get("split_on", "-"))),
+        section3=_build_section3_grouped(df, section3_cfg, config),
         section4=_matrix_for_section(df, section4_cfg, config),
         section5=_matrix_for_section(df, section5_cfg, config),
         section6=_matrix_for_section(df, section6_cfg, config),
         section6_post_yes_no=_build_yes_no_block(df, section6_cfg, config, chart_dir),
     )
-    content.summary_lines = _summary_lines(content)
+    content.summary_lines = [*_summary_lines(content), *_open_ended_summary(df, config)]
 
     output_path = out_dir / "report.pdf"
     PDFBuilder(output_path).build(content)

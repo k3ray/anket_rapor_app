@@ -41,7 +41,11 @@ def draw_chart(
 
     fig, ax = plt.subplots(figsize=(6, 4))
     if chart_type == "pie":
-        ax.pie(values, labels=categories, autopct="%1.1f%%", startangle=90)
+        def _autopct(pct: float) -> str:
+            return f"{pct:.1f}".replace(".", ",") + "%"
+
+        wedges, _, _ = ax.pie(values, autopct=_autopct, startangle=90)
+        ax.legend(wedges, categories, loc="center left", bbox_to_anchor=(1.0, 0.5), fontsize=8)
         ax.axis("equal")
     else:
         ax.bar(categories, values)

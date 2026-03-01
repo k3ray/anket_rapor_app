@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Iterable
 
+from anket_rapor_app.text_utils import clean_text
+
 
 def format_percent_tr(value: float) -> str:
     """Format percentage with one decimal and Turkish comma separator."""
@@ -12,7 +14,7 @@ def format_percent_tr(value: float) -> str:
 def _normalize_response(value: Any) -> str | None:
     if value is None:
         return None
-    text = str(value).strip()
+    text = clean_text(value)
     if not text or text.lower() == "nan":
         return None
     return text

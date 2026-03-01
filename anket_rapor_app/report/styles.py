@@ -132,7 +132,12 @@ def small_table_style(row_count: int) -> TableStyle:
     )
 
 
-def matrix_table_style(row_count: int, col_count: int, average_row_idx: int | None = None) -> TableStyle:
+def matrix_table_style(
+    row_count: int,
+    col_count: int,
+    average_row_idx: int | None = None,
+    row_kinds: list[str] | None = None,
+) -> TableStyle:
     """III–VI bölüm matris stili: Toplam sütunu ve ORTALAMA satırı gri."""
     font_name, font_bold_name = register_turkish_fonts()
     total_col = col_count - 1
@@ -160,4 +165,20 @@ def matrix_table_style(row_count: int, col_count: int, average_row_idx: int | No
                 ("LINEABOVE", (0, average_row_idx), (-1, average_row_idx), 0.9, BORDER_COLOR),
             ]
         )
+    if row_kinds:
+        for data_idx, kind in enumerate(row_kinds, start=1):
+            if kind == "group":
+                commands.extend(
+                    [
+                        ("BACKGROUND", (0, data_idx), (-1, data_idx), GRAY_HEADER),
+                        ("FONT", (0, data_idx), (-1, data_idx), font_bold_name, 10),
+                    ]
+                )
+            if kind == "average":
+                commands.extend(
+                    [
+                        ("BACKGROUND", (0, data_idx), (-1, data_idx), GRAY_TOTAL),
+                        ("FONT", (0, data_idx), (-1, data_idx), font_bold_name, 10),
+                    ]
+                )
     return TableStyle(commands)

@@ -15,6 +15,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import (
     Image,
     KeepTogether,
+    PageBreak,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
@@ -22,7 +23,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from report.styles import build_paragraph_styles, matrix_table_style, small_table_style
+from anket_rapor_app.report.styles import build_paragraph_styles, matrix_table_style, small_table_style
 
 
 @dataclass(slots=True)
@@ -52,6 +53,7 @@ class ReportContent:
     section5: MatrixSection | None = None
     section6: MatrixSection | None = None
     section6_post_yes_no: SmallBlock | None = None
+    summary_lines: list[str] = field(default_factory=list)
 
 
 class PDFBuilder:
@@ -74,15 +76,20 @@ class PDFBuilder:
 
         flowables = []
         flowables.extend(self._build_small_sections("I. BÖLÜM", content.section1))
+        flowables.append(PageBreak())
         flowables.extend(self._build_small_sections("II. BÖLÜM", content.section2))
 
         if content.section3:
+            flowables.append(PageBreak())
             flowables.extend(self._build_matrix_section("III. BÖLÜM", content.section3))
         if content.section4:
+            flowables.append(PageBreak())
             flowables.extend(self._build_matrix_section("IV. BÖLÜM", content.section4))
         if content.section5:
+            flowables.append(PageBreak())
             flowables.extend(self._build_matrix_section("V. BÖLÜM", content.section5))
         if content.section6:
+            flowables.append(PageBreak())
             flowables.extend(self._build_matrix_section("VI. BÖLÜM", content.section6))
 
         if content.section6_post_yes_no:
@@ -91,6 +98,14 @@ class PDFBuilder:
                     "VI. BÖLÜM (EK SORU)", [content.section6_post_yes_no]
                 )
             )
+
+        if content.summary_lines:
+            flowables.append(PageBreak())
+            flowables.append(Paragraph("SONUÇ VE DEĞERLENDİRME", self.styles["SectionTitle"]))
+            flowables.append(Spacer(1, 2 * mm))
+            for line in content.summary_lines:
+                flowables.append(Paragraph(f"• {line}", self.styles["BodyTextTR"]))
+                flowables.append(Spacer(1, 1 * mm))
 
         doc.build(flowables)
 

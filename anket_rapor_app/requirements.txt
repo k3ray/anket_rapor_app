@@ -4,4 +4,4 @@ PyYAML
 reportlab
 scikit-learn
 requests
-matplotlib
+matplotlibpypdf

@@ -1,0 +1,6 @@
+pandas
+openpyxl
+PyYAML
+reportlab
+scikit-learn
+requests

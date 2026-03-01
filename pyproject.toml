@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anket-rapor-app"
+version = "0.1.0"
+description = "Anket raporu PDF üretim aracı"
+readme = "anket_rapor_app/README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pandas",
+  "pyyaml",
+  "openpyxl",
+  "reportlab",
+  "matplotlib",
+  "scikit-learn",
+]
+
+[tool.setuptools.packages.find]
+include = ["anket_rapor_app*"]
+

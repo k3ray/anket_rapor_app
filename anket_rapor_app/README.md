@@ -1,16 +1,18 @@
 # Anket Rapor App
 
-## Çalıştırma (önerilen)
+## Çalıştırma (tek komut)
 
 ```bash
-pip install -r requirements.txt
-python -c "from report_builder import generate_report; print(generate_report(r'.\samples\input.xlsx', r'.\config\config_rizepem_2026_2.yaml', r'.\out'))"
+pip install -e .
+python -m anket_rapor_app --input samples/input.xlsx --config config/config_rizepem_2026_2.yaml --outdir out
 ```
+
+Bu komut `out/report.pdf` üretir.
 
 ## Legacy / Demo
 
 - `python gui.py` ve `src/app` akışı legacy/demo amaçlıdır.
-- Üretim için tek doğru entrypoint: `report_builder.generate_report(...)`.
+- Üretim için tek doğru entrypoint: `python -m anket_rapor_app ...`.
 
 ## PyInstaller ile EXE alma
 

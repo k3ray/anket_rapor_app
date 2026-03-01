@@ -40,6 +40,7 @@ class MatrixSection:
     headers: list[str]
     rows: list[list[str]]
     average_row_idx: int | None = None
+    row_kinds: list[str] = field(default_factory=list)
     comment: str = ""
 
 
@@ -152,6 +153,7 @@ class PDFBuilder:
                 row_count=len(table_rows),
                 col_count=len(matrix.headers),
                 average_row_idx=matrix.average_row_idx,
+                row_kinds=matrix.row_kinds,
             )
         )
 

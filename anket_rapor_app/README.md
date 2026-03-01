@@ -1,29 +1,22 @@
-# anket_rapor_app (v0)
-
-Bu proje, Excel anket çıktısından **minimal** 2 sayfalık PDF rapor üretir.
-
-## Kurulum
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+# Anket Rapor App
 
 ## Çalıştırma
 
-Repo içindeki örnek veriyle:
-
 ```bash
-python -m app \
-  --input samples/input.xlsx \
-  --config config/config_rizepem_2026_2.yaml \
-  --out out/report.pdf
+pip install -r requirements.txt
+python gui.py
 ```
 
-## Üretilen içerik (v0)
+## PyInstaller ile EXE alma
 
-- Sayfa 1: 1 demografik dağılım (YAŞ) tablosu + grafiği
-- Sayfa 2: 1 kapalı uçlu soru dağılımı tablosu + grafiği
+```bash
+pip install pyinstaller
+pyinstaller pyinstaller/app.spec
+```
 
-PDF beyaz arka planlıdır (ızgara/çizgili arka plan kullanılmaz).
+Çıktı dosyası `dist/anket_rapor_app` (Windows'ta `.exe`) olarak oluşur.
+
+## Notlar
+- Açık uçlu analizde önce localhost LLM (Ollama: `http://127.0.0.1:11434`) denenir.
+- LLM yoksa TF-IDF + KMeans fallback analizi otomatik devreye girer.
+- PII maskeleme: e-posta, TR telefon, TC kimlik benzeri desenler.
